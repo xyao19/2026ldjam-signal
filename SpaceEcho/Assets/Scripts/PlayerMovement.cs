@@ -17,11 +17,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform visual;
 
     private Rigidbody2D rb;
+    private Animator animator;
+    private SpriteRenderer spriteRenderer;   // ⭐ 新增
 
     private Vector2 moveInput;
     private bool isGrounded;
-
-    private Vector3 visualOriginalScale;
+    private bool isWalking;
 
     private void Awake()
     {
@@ -29,54 +30,45 @@ public class PlayerMovement : MonoBehaviour
 
         if (visual != null)
         {
-            visualOriginalScale = visual.localScale;
+            animator = visual.GetComponent<Animator>();
+            spriteRenderer = visual.GetComponent<SpriteRenderer>();   // ⭐ 新增
         }
     }
 
     private void Update()
     {
-        // 地面检测
-        isGrounded = Physics2D.OverlapCircle(
-            groundCheck.position,
-            groundCheckRadius,
-            groundLayer
-        );
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-        // 角色朝向翻转
-        if (visual != null)
+        if (animator != null)
         {
-            if (moveInput.x > 0.01f)
-            {
-                visual.localScale = new Vector3(
-                    Mathf.Abs(visualOriginalScale.x),
-                    visualOriginalScale.y,
-                    visualOriginalScale.z
-                );
-            }
-            else if (moveInput.x < -0.01f)
-            {
-                visual.localScale = new Vector3(
-                    -Mathf.Abs(visualOriginalScale.x),
-                    visualOriginalScale.y,
-                    visualOriginalScale.z
-                );
-            }
+            animator.SetBool("isWalking", isWalking);
         }
     }
 
     private void FixedUpdate()
     {
-        // 水平移动
         rb.velocity = new Vector2(moveInput.x * moveSpeed, rb.velocity.y);
     }
 
-    // Input System - Move
     public void Move(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
+        isWalking = Mathf.Abs(moveInput.x) > 0.01f;
+
+        // ⭐ 用 SpriteRenderer.flipX 翻转
+        if (spriteRenderer != null)
+        {
+            if (moveInput.x > 0.01f)
+            {
+                spriteRenderer.flipX = false;
+            }
+            else if (moveInput.x < -0.01f)
+            {
+                spriteRenderer.flipX = true;
+            }
+        }
     }
 
-    // Input System - Jump
     public void Jump(InputAction.CallbackContext context)
     {
         if (context.started && isGrounded)
