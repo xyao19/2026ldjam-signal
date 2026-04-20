@@ -17,13 +17,11 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform visual;
 
     private Rigidbody2D rb;
-    private Animator animator;
 
     private Vector2 moveInput;
     private bool isGrounded;
-    private Vector3 visualOriginalScale;
 
-    private bool isWalking;
+    private Vector3 visualOriginalScale;
 
     private void Awake()
     {
@@ -31,22 +29,20 @@ public class PlayerMovement : MonoBehaviour
 
         if (visual != null)
         {
-            animator = visual.GetComponent<Animator>();
             visualOriginalScale = visual.localScale;
         }
     }
 
     private void Update()
     {
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        // 地面检测
+        isGrounded = Physics2D.OverlapCircle(
+            groundCheck.position,
+            groundCheckRadius,
+            groundLayer
+        );
 
-        if (animator != null)
-        {
-            animator.SetBool("isWalking", isWalking);
-            animator.SetBool("isGrounded", isGrounded);
-            animator.SetFloat("yVelocity", rb.velocity.y);
-        }
-
+        // 角色朝向翻转
         if (visual != null)
         {
             if (moveInput.x > 0.01f)
@@ -70,39 +66,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // 水平移动
         rb.velocity = new Vector2(moveInput.x * moveSpeed, rb.velocity.y);
     }
 
-    // 给 Move 事件调用
+    // Input System - Move
     public void Move(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
-
-        // 只根据左右输入决定是否走路
-        isWalking = Mathf.Abs(moveInput.x) > 0.01f;
-
-        if (visual != null)
-        {
-            if (moveInput.x > 0.01f)
-            {
-                visual.localScale = new Vector3(
-                    Mathf.Abs(visualOriginalScale.x),
-                    visualOriginalScale.y,
-                    visualOriginalScale.z
-                );
-            }
-            else if (moveInput.x < -0.01f)
-            {
-                visual.localScale = new Vector3(
-                    -Mathf.Abs(visualOriginalScale.x),
-                    visualOriginalScale.y,
-                    visualOriginalScale.z
-                );
-            }
-        }
     }
 
-    // 给 Jump 事件调用
+    // Input System - Jump
     public void Jump(InputAction.CallbackContext context)
     {
         if (context.started && isGrounded)
