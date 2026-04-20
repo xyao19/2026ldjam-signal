@@ -16,6 +16,13 @@ public class PlayerMovement : MonoBehaviour
     [Header("视觉层")]
     [SerializeField] private Transform visual;
 
+    [Header("脚步声")]
+    [SerializeField] private AudioSource footstepAudio;
+    [SerializeField] private AudioClip[] footstepClips;
+    [SerializeField] private float stepInterval = 0.4f;
+
+    private float stepTimer;
+
     private Rigidbody2D rb;
     private Animator animator;
     private SpriteRenderer spriteRenderer;   // ⭐ 新增
@@ -43,6 +50,31 @@ public class PlayerMovement : MonoBehaviour
         {
             animator.SetBool("isWalking", isWalking);
         }
+
+        // 脚步声逻辑
+        if (isWalking && isGrounded)
+        {
+            stepTimer += Time.deltaTime;
+
+            if (stepTimer >= stepInterval)
+            {
+                PlayFootstep();
+                stepTimer = 0f;
+            }
+        }
+        else
+        {
+            stepTimer = 0f;
+        }
+
+    }
+
+    void PlayFootstep()
+    {
+        if (footstepClips.Length == 0 || footstepAudio == null) return;
+
+        int index = Random.Range(0, footstepClips.Length);
+        footstepAudio.PlayOneShot(footstepClips[index]);
     }
 
     private void FixedUpdate()
